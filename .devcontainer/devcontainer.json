@@ -1,0 +1,25 @@
+{
+	"name": "Rust iExec",
+	"image": "mcr.microsoft.com/devcontainers/rust:1-1-bullseye",
+	"mounts": [
+		"type=bind,source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,readonly"
+	],
+	"customizations": {
+		"vscode": {
+			"settings": {
+				"workbench.colorCustomizations": {
+					"statusBar.background": "#10966e",
+					"statusBar.foreground": "#ffffff"
+				}
+			},
+			"extensions": [
+				"rust-lang.rust-analyzer",
+				"tamasfe.even-better-toml",
+				"fill-labs.dependi"
+			]
+		}
+	},
+	"features": {
+		"ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+	}
+}

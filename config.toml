@@ -1,0 +1,8 @@
+[openmeteo]
+latitude = 45.764
+longitude = 4.8357
+timezone = "Europe/Berlin"
+
+[server]
+port = 8080
+ttl=3600
