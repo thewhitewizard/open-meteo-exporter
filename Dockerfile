@@ -5,4 +5,4 @@ WORKDIR /app
 COPY target/aarch64-unknown-linux-gnu/release/open-meteo-exporter /app/
 EXPOSE 8080
 
-CMD ["/app/open-meteo-exporter"]
+CMD ["open-meteo-exporter"]
