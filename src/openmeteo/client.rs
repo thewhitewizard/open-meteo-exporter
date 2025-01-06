@@ -11,6 +11,7 @@ const DEFAULT_USER_AGENT: &str = "OMClient/1.0";
 pub struct CurrentWeather { 
     pub temperature_2m: f64,
     pub relative_humidity_2m: u8,
+    pub is_day:u8,
     pub apparent_temperature: f64,
     pub precipitation: f64,
     pub precipitation_probability: f64,
@@ -64,7 +65,7 @@ impl OMClient {
 
     pub async fn get_current_weather(&self) -> Result<WeatherResponse, Error> {
         let url = format!(
-            "{}?latitude={}&longitude={}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,precipitation_probability,rain,weather_code,cloud_cover,pressure_msl,surface_pressure,wind_speed_10m,wind_direction_10m&timezone={}",
+            "{}?latitude={}&longitude={}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,precipitation_probability,rain,weather_code,cloud_cover,pressure_msl,surface_pressure,wind_speed_10m,wind_direction_10m&timezone={}",
             DEFAULT_FORECAST_ENDPOINT, self.latitude, self.longitude, self.timezone
         );
 

@@ -5,4 +5,4 @@ timezone = "Europe/Berlin"
 
 [server]
 port = 8080
-ttl = 3600
+ttl = 900

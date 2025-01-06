@@ -1,11 +1,11 @@
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 use tokio::signal;
 use warp::Filter;
 
-use crate::state::OMState;
+use crate::{config::WeatherCondition, state::OMState};
 
-pub async fn start_http_server(state: Arc<OMState>, port: u16) {
-    let metrics_route = warp::path("metrics").map(move || generate_metrics(state.clone()));
+pub async fn start_http_server(state: Arc<OMState>, port: u16,weather_condition_config: HashMap<String, WeatherCondition>) {
+    let metrics_route = warp::path("metrics").map(move || generate_metrics(state.clone(),weather_condition_config.clone()));
 
     let shutdown_signal = async {
         signal::ctrl_c()
@@ -21,11 +21,15 @@ pub async fn start_http_server(state: Arc<OMState>, port: u16) {
     server.await;
 }
 
-fn generate_metrics(state: Arc<OMState>) -> String {
+fn generate_metrics(state: Arc<OMState>, weather_condition_config: HashMap<String, WeatherCondition>) -> String {
     let mut metrics = String::new();
-    
+
     let weather_data = state.get_weather();
     if let Some(weather) = weather_data {
+
+
+        let icon = get_image_url(&weather_condition_config,weather.current.weather_code,weather.current.is_day).unwrap();
+       
         metrics.push_str(
             "# HELP weather_temperature_2m Current air temperature at 2 meters above ground in °C.\n",
         );
@@ -60,9 +64,17 @@ fn generate_metrics(state: Arc<OMState>) -> String {
             weather.current.precipitation_probability
         ));
 
+        metrics.push_str("# HELP weather_is_day 1 is day, 0 is night.\n");
+        metrics.push_str("# TYPE weather_is_day gauge\n");
+        metrics.push_str(&format!("weather_is_day {}\n", weather.current.is_day));
+
         metrics.push_str("# HELP weather_weather_code Weather condition as a numeric code. Follow WMO weather interpretation codes.\n");
         metrics.push_str("# TYPE weather_weather_code counter\n");
-        metrics.push_str(&format!("weather_weather_code {}\n", weather.current.weather_code));
+        metrics.push_str(&format!(
+            "weather_weather_code{{icon=\"{}\"}} {}\n",
+            icon,
+            weather.current.weather_code
+        ));
 
         metrics.push_str("# HELP weather_relative_humidity_2m Current relative humidity at 2 meters above ground in %.\n");
         metrics.push_str("# TYPE weather_relative_humidity_2m gauge\n");
@@ -87,7 +99,10 @@ fn generate_metrics(state: Arc<OMState>) -> String {
 
         metrics.push_str("# HELP weather_cloud_cover Cloud cover in %.\n");
         metrics.push_str("# TYPE weather_cloud_cover gauge\n");
-        metrics.push_str(&format!("weather_cloud_cover {}\n", weather.current.cloud_cover));
+        metrics.push_str(&format!(
+            "weather_cloud_cover {}\n",
+            weather.current.cloud_cover
+        ));
 
         metrics.push_str("# HELP weather_surface_pressure Pressure at mean sea level in hPa.\n");
         metrics.push_str("# TYPE weather_surface_pressure gauge\n");
@@ -98,10 +113,25 @@ fn generate_metrics(state: Arc<OMState>) -> String {
 
         metrics.push_str("# HELP weather_pressure_msl Pressure at mean sea level in hPa.\n");
         metrics.push_str("# TYPE weather_pressure_msl gauge\n");
-        metrics.push_str(&format!("weather_pressure_msl {}\n", weather.current.pressure_msl));
+        metrics.push_str(&format!(
+            "weather_pressure_msl {}\n",
+            weather.current.pressure_msl
+        ));
     } else {
         metrics.push_str("# No weather data available yet.\n");
     }
 
     metrics
+}
+
+
+fn get_image_url(weather_condition_config: &HashMap<String, WeatherCondition>, code: u16, time: u8) -> Option<String> {
+    let code_as_string = format!("{}", code);
+    weather_condition_config.get(&code_as_string).map(|weather| {
+        match time {
+            1 => weather.day.image.clone(),
+            0 => weather.night.image.clone(),
+            _ => "".to_string(),
+        }
+    })
 }

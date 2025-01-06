@@ -12,6 +12,7 @@ use config::Config;
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let config = Config::load_from_file("config.toml").expect("Failed to load configuration");
+    let weather_condition_config = Config::load_weather_config("weather_condition_config.json");    
     println!("{:?}", config);
 
     let state = Arc::new(OMState::new());
@@ -27,7 +28,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await;
     });
 
-    start_http_server(state,config.server.port).await;
+    start_http_server(state,config.server.port,weather_condition_config).await;
 
     Ok(())
 }
